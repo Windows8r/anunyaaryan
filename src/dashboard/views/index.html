@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naura OS Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar-nav flex flex-col h-full absolute lg:relative lg:translate-x-0 -translate-x-full z-40 transition-transform duration-300">
+        <div class="h-20 flex items-center justify-center border-b border-[rgba(255,182,193,0.15)]">
+            <h1 class="display-md text-glow" style="color: var(--color-primary)">NAURA OS</h1>
+        </div>
+        
+        <nav class="flex-grow py-6 flex flex-col gap-2 overflow-y-auto">
+            <a href="#" class="nav-link active" onclick="switchSection('telemetry')">
+                <i class="fa-solid fa-chart-line w-8 text-center"></i> System Telemetry
+            </a>
+            <a href="#" class="nav-link" onclick="switchSection('modules')">
+                <i class="fa-solid fa-microchip w-8 text-center"></i> Active Modules
+            </a>
+            <a href="#" class="nav-link" onclick="switchSection('account')">
+                <i class="fa-solid fa-user-astronaut w-8 text-center"></i> Private Vault
+            </a>
+            <div class="mt-8 mb-4 px-6"><span class="label-uppercase text-[var(--color-muted)]">External</span></div>
+            <a href="/leaderboard" class="nav-link">
+                <i class="fa-solid fa-trophy w-8 text-center"></i> Global Leaderboard
+            </a>
+            <a href="/welcomer" class="nav-link">
+                <i class="fa-solid fa-image-portrait w-8 text-center"></i> Welcomer UI
+            </a>
+            <a href="/settings" class="nav-link">
+                <i class="fa-solid fa-gear w-8 text-center"></i> Config Panel
+            </a>
+        </nav>
+
+        <div class="p-6 border-t border-[rgba(255,182,193,0.15)]" id="authContainer">
+            <a href="/auth/discord" class="btn-discord w-full text-center">
+                <i class="fa-brands fa-discord mr-2"></i> Sync Discord
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col h-full relative overflow-y-auto">
+        <!-- Top Header -->
+        <header class="top-header flex items-center justify-between px-6 lg:px-10 shrink-0 sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <button class="lg:hidden text-white text-2xl hover:text-pink-400 transition" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="flex items-center gap-4 cursor-pointer" onclick="toggleChat()">
+                    <div class="relative">
+                        <img id="botAvatar" src="/assets/naura.gif" alt="Avatar" class="w-12 h-12 rounded-full border border-[var(--color-primary)] shadow-[0_0_10px_rgba(255,182,193,0.4)] object-cover">
+                        <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border border-gray-900 rounded-full animate-pulse"></div>
+                    </div>
+                    <div class="hidden sm:block">
+                        <h2 class="title-md leading-tight text-glow" id="botName">Naura Hoshino</h2>
+                        <span class="label-uppercase text-green-400 text-[10px]">Core Online</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Global Economy Badge (Top Right) -->
+            <div id="economyBadge" class="hidden items-center gap-3 economy-badge text-glow-gold">
+                <i class="fa-solid fa-coins"></i> <span id="vaultGlobal" class="font-cyber font-bold tracking-wider">0</span>
+            </div>
+        </header>
+
+        <!-- Dashboard Body -->
+        <div class="p-6 lg:p-10 max-w-7xl mx-auto w-full pb-20">
+
+            <!-- Section 1: Telemetry -->
+            <section id="sec-telemetry" class="block animate-fade-in">
+                <h2 class="title-lg mb-6"><i class="fa-solid fa-radar text-pink-400 mr-2"></i> Real-time Telemetry</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+                    <div class="telemetry-card border-accent-pink group">
+                        <div class="label-uppercase text-[var(--color-body)] mb-2">Network Latency</div>
+                        <div class="display-xl text-white"><span id="statPing">0</span><span class="text-xl text-[var(--color-muted)] ml-1">ms</span></div>
+                        <i class="fa-solid fa-bolt bg-icon"></i>
+                    </div>
+                    <div class="telemetry-card border-accent-purple group">
+                        <div class="label-uppercase text-[var(--color-body)] mb-2">Guild Networks</div>
+                        <div class="display-xl text-white" id="statServers">0</div>
+                        <i class="fa-solid fa-network-wired bg-icon"></i>
+                    </div>
+                    <div class="telemetry-card border-accent-blue group">
+                        <div class="label-uppercase text-[var(--color-body)] mb-2">User Demographics</div>
+                        <div class="display-xl text-white" id="statUsers">0</div>
+                        <i class="fa-solid fa-users bg-icon"></i>
+                    </div>
+                    <div class="telemetry-card border-accent-green group">
+                        <div class="label-uppercase text-[var(--color-body)] mb-2">System Uptime</div>
+                        <div class="display-md text-white mt-3" id="statUptime">Baru saja mulai</div>
+                        <i class="fa-solid fa-stopwatch bg-icon"></i>
+                    </div>
+                </div>
+                
+                <!-- Extra Telemetry Details -->
+                <div class="glass-panel rounded-xxl p-8 mt-6">
+                    <h3 class="title-md mb-4 border-b border-[var(--color-hairline)] pb-3">Performance Diagnostics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <p class="label-uppercase text-[var(--color-muted)] mb-1">Node Environment</p>
+                            <p class="font-cyber text-lg text-white">v24.0.0+</p>
+                        </div>
+                        <div>
+                            <p class="label-uppercase text-[var(--color-muted)] mb-1">Database Sync</p>
+                            <p class="font-cyber text-lg text-green-400">Stable</p>
+                        </div>
+                        <div>
+                            <p class="label-uppercase text-[var(--color-muted)] mb-1">AI Engine Fallback</p>
+                            <p class="font-cyber text-lg text-blue-400">Verba ⇄ Gemini</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Active Modules -->
+            <section id="sec-modules" class="hidden animate-fade-in">
+                <h2 class="title-lg mb-6"><i class="fa-solid fa-microchip text-purple-400 mr-2"></i> Active Subsystems</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="module-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="title-md"><i class="fa-solid fa-music text-pink-400 mr-2"></i>Audio Core (Lavalink)</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-sm text-xs font-bold border border-green-500/30">ONLINE</span>
+                        </div>
+                        <p class="text-[var(--color-body-strong)] font-light mb-4 text-sm leading-relaxed">Sistem multi-node untuk transmisi audio kualitas tinggi dari YouTube Music, Spotify, Apple Music, dan SoundCloud. Dilengkapi Autoplay AI via Gemini.</p>
+                    </div>
+                    <div class="module-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="title-md"><i class="fa-solid fa-lock text-purple-400 mr-2"></i>Private Voice Rooms</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-sm text-xs font-bold border border-green-500/30">ONLINE</span>
+                        </div>
+                        <p class="text-[var(--color-body-strong)] font-light mb-4 text-sm leading-relaxed">Generator channel suara dinamis dengan kontrol antarmuka tombol (Kunci, Sembunyikan, Tendang, Batas User).</p>
+                    </div>
+                    <div class="module-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="title-md"><i class="fa-solid fa-shield text-blue-400 mr-2"></i>Auto-Moderation</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-sm text-xs font-bold border border-green-500/30">ACTIVE</span>
+                        </div>
+                        <p class="text-[var(--color-body-strong)] font-light mb-4 text-sm leading-relaxed">Filter bahasa, larangan tautan Discord Invite, perlindungan spam, serta sistem Poin Tata Krama (Manners Point) bertenaga AI.</p>
+                    </div>
+                    <div class="module-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="title-md"><i class="fa-solid fa-robot text-emerald-400 mr-2"></i>Verba Conversational AI</h3>
+                            <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-sm text-xs font-bold border border-green-500/30">ACTIVE</span>
+                        </div>
+                        <p class="text-[var(--color-body-strong)] font-light mb-4 text-sm leading-relaxed">Asisten virtual yang disetel untuk merespons dengan identitas "Naura Hoshino" secara responsif dan mempertahankan konteks sesi obrolan.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Private Vault -->
+            <section id="sec-account" class="hidden animate-fade-in">
+                <h2 class="title-lg mb-6"><i class="fa-solid fa-vault text-yellow-400 mr-2"></i> Economy Vault</h2>
+                
+                <div id="unauthVaultMsg" class="glass-panel rounded-xxl p-10 text-center">
+                    <i class="fa-brands fa-discord text-6xl text-[var(--color-discord-blurple)] mb-6 opacity-80"></i>
+                    <h3 class="title-md mb-2">Akses Ditolak</h3>
+                    <p class="text-[var(--color-body-strong)] mb-8 max-w-md mx-auto">Anda harus menghubungkan identitas Discord Anda terlebih dahulu untuk membuka akses sinkronisasi dompet ekonomi.</p>
+                    <a href="/auth/discord" class="btn-discord">
+                        <i class="fa-brands fa-discord mr-2"></i> Sync Discord Account
+                    </a>
+                </div>
+
+                <div id="authVaultData" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="module-card border border-yellow-500/30 relative overflow-hidden">
+                            <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fa-solid fa-wallet text-9xl text-yellow-400"></i></div>
+                            <h3 class="label-uppercase text-yellow-500 mb-2">Liquid Cash (Wallet)</h3>
+                            <p class="display-md text-white font-cyber text-glow-gold">Rp <span id="vaultWalletVal">0</span></p>
+                        </div>
+                        <div class="module-card border border-blue-500/30 relative overflow-hidden">
+                            <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fa-solid fa-building-columns text-9xl text-blue-400"></i></div>
+                            <h3 class="label-uppercase text-blue-400 mb-2">Stored Assets (Bank)</h3>
+                            <p class="display-md text-white font-cyber text-glow" style="text-shadow: 0 0 10px rgba(147,197,253,0.6)">Rp <span id="vaultBankVal">0</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="title-md mb-4 border-b border-[var(--color-hairline)] pb-2">Status Hak Akses (VIP)</h3>
+                        <p id="vaultVipStatus" class="text-white text-lg font-light">Loading...</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Chat Modal (Naura Overlay) -->
+    <div id="nauraChatModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="chat-container rounded-3xl w-full max-w-md h-[75vh] flex flex-col relative overflow-hidden">
+            <!-- Header Chat -->
+            <div class="bg-[var(--color-surface-elevated)] p-4 border-b border-[var(--color-hairline)] flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <img src="/assets/naura.gif" alt="Naura" class="w-10 h-10 rounded-full border border-[var(--color-primary)] object-cover">
+                    <div>
+                        <h3 class="text-white font-bold text-lg leading-tight">Naura Hoshino</h3>
+                        <p class="text-green-400 text-xs flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Online (Verba AI)</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-gray-400 hover:text-white transition w-8 h-8 rounded-full bg-[var(--color-surface-glass)] flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- Chat Area -->
+            <div id="chatMessages" class="flex-grow p-5 overflow-y-auto flex flex-col gap-4">
+                <div class="bg-[rgba(255,182,193,0.1)] text-white p-3.5 px-4 rounded-2xl rounded-tl-none self-start max-w-[85%] border border-[var(--color-hairline)] shadow-sm text-[15px] font-light">
+                    Konnichiwa! Sistem terminal interaktifku siap menerima instruksimu. Ada yang bisa dibantu? ✨
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 bg-[var(--color-surface-elevated)] border-t border-[var(--color-hairline)] shrink-0">
+                <form id="chatForm" class="flex gap-2 relative">
+                    <input type="text" id="chatInput" placeholder="Ketik perintah atau pertanyaan..." class="w-full bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] text-white rounded-full py-3 px-5 pr-12 focus:outline-none focus:border-[var(--color-primary)] transition text-[15px] font-light">
+                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-primary)] hover:brightness-110 text-[var(--color-on-primary)] w-8 h-8 rounded-full flex items-center justify-center transition shadow-[0_0_10px_var(--color-primary-glow)]">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripting -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // UI Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function switchSection(sectionId) {
+            document.querySelectorAll('section').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('block');
+            });
+            const target = document.getElementById('sec-' + sectionId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+            }
+            
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+
+        function toggleChat() {
+            const modal = document.getElementById('nauraChatModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Fetch Stats
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                
+                document.getElementById('botName').innerText = data.botName;
+                if (document.getElementById('botAvatar')) document.getElementById('botAvatar').src = data.avatar;
+                
+                document.getElementById('statPing').innerText = data.ping;
+                document.getElementById('statServers').innerText = data.servers;
+                document.getElementById('statUsers').innerText = data.users;
+                document.getElementById('statUptime').innerText = data.uptime;
+            } catch (err) {
+                console.error('Error fetching stats:', err);
+            }
+        }
+
+        // Fetch User Data
+        async function fetchUserData() {
+            try {
+                const res = await fetch('/api/me');
+                const data = await res.json();
+                
+                if (data.loggedIn && data.user) {
+                    // Tampilkan user profil di authContainer
+                    document.getElementById('authContainer').innerHTML = `
+                        <div class="flex items-center gap-3 bg-[var(--color-surface-glass)] p-3 rounded-lg border border-[var(--color-hairline)]">
+                            <img src="https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" class="w-10 h-10 rounded-full">
+                            <div class="overflow-hidden">
+                                <p class="text-white text-sm font-bold truncate">${data.user.username}</p>
+                                <a href="/auth/logout" class="text-[10px] text-red-400 hover:text-red-300">Logout</a>
+                            </div>
+                        </div>
+                    `;
+
+                    // Buka Vault Data
+                    document.getElementById('unauthVaultMsg').classList.add('hidden');
+                    document.getElementById('authVaultData').classList.remove('hidden');
+                    
+                    if (data.db) {
+                        document.getElementById('vaultWalletVal').innerText = (data.db.economy_wallet || 0).toLocaleString('id-ID');
+                        document.getElementById('vaultBankVal').innerText = (data.db.economy_bank || 0).toLocaleString('id-ID');
+                        
+                        document.getElementById('economyBadge').classList.remove('hidden');
+                        document.getElementById('economyBadge').classList.add('flex');
+                        document.getElementById('vaultGlobal').innerText = (data.db.economy_wallet || 0).toLocaleString('id-ID');
+
+                        let vipText = 'Regular Sync';
+                        if (data.db.isPremium && data.db.premiumUntil) {
+                            const expiry = new Date(data.db.premiumUntil);
+                            if (expiry > new Date()) {
+                                vipText = `<span class="text-yellow-400 font-bold"><i class="fa-solid fa-crown mr-2"></i> VIP Premium Active</span><br><span class="text-sm text-[var(--color-muted)]">Valid until: ${expiry.toLocaleString()}</span>`;
+                            }
+                        }
+                        document.getElementById('vaultVipStatus').innerHTML = vipText;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // Chat AI Logic
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        function appendMessage(msg, isUser = false) {
+            const div = document.createElement('div');
+            if (isUser) {
+                div.className = "bg-[var(--color-primary)] text-[var(--color-on-primary)] p-3.5 px-4 rounded-2xl rounded-tr-none self-end max-w-[85%] shadow-[0_0_10px_var(--color-primary-glow)] text-[15px] font-medium";
+            } else {
+                div.className = "bg-[rgba(255,182,193,0.1)] text-white p-3.5 px-4 rounded-2xl rounded-tl-none self-start max-w-[85%] border border-[var(--color-hairline)] shadow-sm text-[15px] font-light";
+            }
+            div.innerHTML = msg.replace(/\n/g, '<br>');
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            appendMessage(text, true);
+            socket.emit('chat_message', { message: text });
+            
+            chatInput.value = '';
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'chatLoading';
+            loadingDiv.className = "bg-[rgba(255,182,193,0.05)] text-[var(--color-muted)] p-3 px-4 rounded-2xl rounded-tl-none self-start border border-[var(--color-hairline)] text-sm flex gap-1 items-center";
+            loadingDiv.innerHTML = '<span class="animate-pulse">●</span><span class="animate-pulse" style="animation-delay: 0.2s">●</span><span class="animate-pulse" style="animation-delay: 0.4s">●</span>';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        socket.on('chat_response', (data) => {
+            const loader = document.getElementById('chatLoading');
+            if (loader) loader.remove();
+            appendMessage(data.reply, false);
+        });
+
+        // Initialize
+        fetchStats();
+        fetchUserData();
+        setInterval(fetchStats, 30000); // Sesuai permintaan task: optimasi polling 30 detik
+    </script>
+
+    <style>
+        .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</body>
+</html>
