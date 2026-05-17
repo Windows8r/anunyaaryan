@@ -1,0 +1,36 @@
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const GuildSettings = require('../../models/GuildSettings');
+const ui = require('../../config/ui');
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('automod')
+        .setDescription('Pengaturan Automod dan Poin Tata Krama (Manners Point).')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addSubcommand(sub => sub.setName('toggle').setDescription('Nyalakan/matikan Automod'))
+        .addSubcommand(sub => sub.setName('role').setDescription('Role hukuman ketika Poin Tata Krama habis')
+            .addRoleOption(opt => opt.setName('target').setDescription('Role yang diberikan ke pelanggar').setRequired(true))),
+
+    async execute(interaction) {
+        await interaction.deferReply({ ephemeral: true });
+        const sub = interaction.options.getSubcommand();
+        const settings = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+        
+        let automod = settings.settings.automod || { enabled: true, antiInvite: false, antiCaps: false, massMention: 5, antiSpam: true, badWords: [] };
+
+        if (sub === 'toggle') {
+            automod.enabled = !automod.enabled;
+            settings.settings.automod = automod;
+            settings.changed('settings', true);
+            await settings.save();
+            return interaction.editReply(`${ui.getEmoji('success')} Automod kini **${automod.enabled ? 'AKTIF' : 'MATI'}**.`);
+        } else if (sub === 'role') {
+            const role = interaction.options.getRole('target');
+            automod.punishRole = role.id;
+            settings.settings.automod = automod;
+            settings.changed('settings', true);
+            await settings.save();
+            return interaction.editReply(`${ui.getEmoji('success')} Role hukuman (Isolasi) diatur ke ${role}. User yang poin tata kramanya habis akan mendapatkan role ini.`);
+        }
+    }
+};
